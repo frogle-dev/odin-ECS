@@ -1,5 +1,5 @@
 {
-  description = "rust devenv";
+  description = "odin devenv";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
