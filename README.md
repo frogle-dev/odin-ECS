@@ -1,2 +1,2 @@
-# odin ECS
+# Indecs
 ECS made in odin
