@@ -1,0 +1,4 @@
+{
+    "checker_args": "-custom-attribute:system",
+    "verbose": true,
+}

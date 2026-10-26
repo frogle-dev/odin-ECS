@@ -24,7 +24,9 @@
           nativeBuildInputs = with pkgs; [
             odin
             ols
-            clang
+            clang # odin uses for linking
+
+            gf
           ];
         };
       }
