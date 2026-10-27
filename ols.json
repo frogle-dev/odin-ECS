@@ -1,4 +1,4 @@
 {
-    "checker_args": "-custom-attribute:system",
+    "checker_args": "-vet -strict-style -custom-attribute:system,archetype",
     "verbose": true,
 }

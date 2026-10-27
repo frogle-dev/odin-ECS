@@ -32,7 +32,12 @@ main :: proc() {
 		}
 	}
 
-	if err := ecs.init("data.odin"); err != nil {
-		log.error("ecs init failed:", ecs.error_string(err))
+	if err := ecs.generate("data.odin"); err != nil {
+		log.error("ecs code gen failed:", ecs.error_string(err))
+	}
+
+	world: World
+	if err := init(&world); err != nil {
+		log.error("ecs world init failed:", ecs.error_string(err))
 	}
 }
