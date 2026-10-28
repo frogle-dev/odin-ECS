@@ -1,79 +1,68 @@
 package main
 
+// import "core:fmt"
+
 import "ecs"
 
 Entity :: u32
 
-A_player :: struct {
-	entity: Entity,
-	_:      Position,
-	_:      Velocity,
-	_:      Acceleration,
-	_:      Health,
-	_:      Attack,
-	_:      Stamina,
-	_:      Mana,
-	_:      PlayerTag,
-}
-
-A_enemy :: struct {
-	entity: Entity,
-	_:      Position,
-	_:      Velocity,
-	_:      Acceleration,
-	_:      Health,
-	_:      Attack,
-	_:      Stamina,
-	_:      EnemyTag,
-}
-
-A_ball :: struct {
-	entity: Entity,
-	_:      Position,
-	_:      Velocity,
-}
-
-A_physics_square :: struct {
-	entity: Entity,
-	_:      Position,
-	_:      Velocity,
-	_:      Acceleration,
-}
-
-A_ui :: struct {
-	entity: Entity,
-	_:      Position,
-}
-
-Archetype_Id :: enum {
-	Player,
-	Enemy,
-	Ball,
-	Physics_Square,
-	Ui,
-}
-
 Entity_Location :: struct {
-	archetype_id: Archetype_Id,
-	idx:          uint,
+	archetype: Archetype,
+	idx:       uint,
 }
 
 World :: struct {
-	a_player:         #soa[dynamic]A_player,
-	a_enemy:          #soa[dynamic]A_enemy,
-	a_ball:           #soa[dynamic]A_ball,
-	a_physics_square: #soa[dynamic]A_physics_square,
-	a_ui:             #soa[dynamic]A_ui,
-	entity_locations: map[Entity]Entity_Location,
+	a_player:              #soa[dynamic]Player,
+	a_enemy:               #soa[dynamic]Enemy,
+	a_ball:                #soa[dynamic]Ball,
+	a_physics_square:      #soa[dynamic]Physics_Square,
+	a_ui:                  #soa[dynamic]Ui,
+	entity_locations:      map[Entity]Entity_Location,
+	next_available_entity: Entity,
 }
 
 init :: proc(world: ^World, allocator := context.allocator) -> ecs.Error {
-	world.a_player = make(#soa[dynamic]A_player, allocator) or_return
-	world.a_enemy = make(#soa[dynamic]A_enemy, allocator) or_return
-	world.a_ball = make(#soa[dynamic]A_ball, allocator) or_return
-	world.a_physics_square = make(#soa[dynamic]A_physics_square, allocator) or_return
-	world.a_ui = make(#soa[dynamic]A_ui, allocator) or_return
+	world.a_player = make(#soa[dynamic]Player, allocator) or_return
+
+	world.a_enemy = make(#soa[dynamic]Enemy, allocator) or_return
+
+	world.a_ball = make(#soa[dynamic]Ball, allocator) or_return
+
+	world.a_physics_square = make(#soa[dynamic]Physics_Square, allocator) or_return
+
+	world.a_ui = make(#soa[dynamic]Ui, allocator) or_return
+
 	world.entity_locations = make(map[Entity]Entity_Location, allocator)
 
+	world.next_available_entity = 0
+
 	return {}
+}
+
+deinit :: proc(world: ^World) {
+	delete(world.a_player)
+	delete(world.a_ball)
+	delete(world.a_physics_square)
+	delete(world.a_ui)
+	delete(world.entity_locations)
+}
+
+spawn :: proc(world: ^World, archetype: Archetype) -> (Entity, bool) {
+	switch a in archetype {
+	case Player:
+		append(&world.a_player, a)
+
+		world.entity_locations[world.next_available_entity] = {
+			archetype = a,
+			idx       = len(world.a_player),
+		}
+	case Enemy:
+	case Ball:
+	case Physics_Square:
+	case Ui:
+	}
+
+	world.next_available_entity += 1
+
+	return 0, false
 }

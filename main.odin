@@ -40,4 +40,10 @@ main :: proc() {
 	if err := init(&world); err != nil {
 		log.error("ecs world init failed:", ecs.error_string(err))
 	}
+	defer deinit(&world)
+
+	_ = spawn(
+		&world,
+		Physics_Square{pos = {x = 5, y = 6}, vel = {x = 2, y = 5}, acc = {x = 10, y = 2}},
+	)
 }

@@ -33,16 +33,41 @@ Mana :: struct {
 PlayerTag :: struct {}
 EnemyTag :: struct {}
 
-@(archetype)
-player :: [?]typeid{Position, Velocity, Acceleration, Health, Attack, Stamina, Mana, PlayerTag}
-@(archetype)
-enemy :: [?]typeid{Position, Velocity, Acceleration, Health, Attack, Stamina, EnemyTag}
-@(archetype)
-ball :: [?]typeid{Position, Velocity}
-@(archetype)
-physics_square :: [?]typeid{Position, Velocity, Acceleration}
-@(archetype)
-ui :: [?]typeid{Position}
+Player :: struct {
+	pos:  Position,
+	vel:  Velocity,
+	acc:  Acceleration,
+	hp:   Health,
+	atk:  Attack,
+	sta:  Stamina,
+	mana: Mana,
+	tag:  PlayerTag,
+}
+
+Enemy :: struct {
+	pos: Position,
+	vel: Velocity,
+	acc: Acceleration,
+	hp:  Health,
+	atk: Attack,
+	sta: Stamina,
+	tag: EnemyTag,
+}
+
+Ball :: struct {
+	pos: Position,
+	vel: Velocity,
+}
+
+Physics_Square :: struct {
+	pos: Position,
+	vel: Velocity,
+	acc: Acceleration,
+}
+
+Ui :: struct {
+	pos: Position,
+}
 
 @(system)
 movement :: proc(query: #soa[]struct {
@@ -92,4 +117,13 @@ wizard :: proc(query: #soa[]struct {
 		mana:    ^Mana,
 		player:  ^PlayerTag,
 	}) {
+}
+
+@(archetype)
+Archetype :: union {
+	Player,
+	Enemy,
+	Ball,
+	Physics_Square,
+	Ui,
 }
