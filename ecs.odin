@@ -4,7 +4,7 @@ package main
 
 import "ecs"
 
-Entity :: u32
+Entity :: uint
 
 Entity_Location :: struct {
 	archetype: Archetype,
@@ -12,57 +12,97 @@ Entity_Location :: struct {
 }
 
 World :: struct {
-	a_player:              #soa[dynamic]Player,
-	a_enemy:               #soa[dynamic]Enemy,
-	a_ball:                #soa[dynamic]Ball,
-	a_physics_square:      #soa[dynamic]Physics_Square,
-	a_ui:                  #soa[dynamic]Ui,
+	a_player:        #soa[dynamic]Player,
+	player_entities: [dynamic]Entity,
+
+	a_enemy:        #soa[dynamic]Enemy,
+	enemy_entities: [dynamic]Entity,
+
+	a_ball:        #soa[dynamic]Ball,
+	ball_entities: [dynamic]Entity,
+
+	a_physics_square:        #soa[dynamic]Physics_Square,
+	physics_square_entities: [dynamic]Entity,
+
+	a_ui:        #soa[dynamic]Ui,
+	ui_entities: [dynamic]Entity,
+
 	entity_locations:      map[Entity]Entity_Location,
 	next_available_entity: Entity,
 }
 
-init :: proc(world: ^World, allocator := context.allocator) -> ecs.Error {
-	world.a_player = make(#soa[dynamic]Player, allocator) or_return
-
-	world.a_enemy = make(#soa[dynamic]Enemy, allocator) or_return
-
-	world.a_ball = make(#soa[dynamic]Ball, allocator) or_return
-
-	world.a_physics_square = make(#soa[dynamic]Physics_Square, allocator) or_return
-
-	world.a_ui = make(#soa[dynamic]Ui, allocator) or_return
-
-	world.entity_locations = make(map[Entity]Entity_Location, allocator)
-
-	world.next_available_entity = 0
-
-	return {}
-}
-
-deinit :: proc(world: ^World) {
+destroy_world :: proc(world: ^World) {
 	delete(world.a_player)
+	delete(world.player_entities)
+
+	delete(world.a_enemy)
+	delete(world.enemy_entities)
+
 	delete(world.a_ball)
+	delete(world.ball_entities)
+
 	delete(world.a_physics_square)
+	delete(world.physics_square_entities)
+
 	delete(world.a_ui)
+	delete(world.ui_entities)
+
 	delete(world.entity_locations)
 }
 
-spawn :: proc(world: ^World, archetype: Archetype) -> (Entity, bool) {
-	switch a in archetype {
-	case Player:
-		append(&world.a_player, a)
-
-		world.entity_locations[world.next_available_entity] = {
-			archetype = a,
-			idx       = len(world.a_player),
-		}
-	case Enemy:
-	case Ball:
-	case Physics_Square:
-	case Ui:
+append_entity_data :: proc(
+	world: ^World,
+	archetype_arr: ^$T/#soa[dynamic]$E,
+	entity_arr: ^[dynamic]Entity,
+	data: E,
+) -> ecs.Error {
+	world.entity_locations[world.next_available_entity] = {
+		archetype = data,
+		idx       = len(archetype_arr^),
 	}
 
+	append(archetype_arr, data) or_return
+	append(entity_arr, world.next_available_entity) or_return
+
+	assert(
+		world.entity_locations[world.next_available_entity].idx == entity_arr[len(entity_arr) - 1],
+	)
+
+	return nil
+}
+
+spawn :: proc(world: ^World, archetype: Archetype) -> (entity: Entity, err: ecs.Error) {
+	switch a in archetype {
+	case Player:
+		append_entity_data(world, &world.a_player, &world.player_entities, a) or_return
+
+		assert(len(world.a_player) == len(world.player_entities))
+	case Enemy:
+		append_entity_data(world, &world.a_enemy, &world.enemy_entities, a) or_return
+
+		assert(len(world.a_enemy) == len(world.enemy_entities))
+	case Ball:
+		append_entity_data(world, &world.a_ball, &world.ball_entities, a) or_return
+
+		assert(len(world.a_ball) == len(world.ball_entities))
+	case Physics_Square:
+		append_entity_data(
+			world,
+			&world.a_physics_square,
+			&world.physics_square_entities,
+			a,
+		) or_return
+
+		assert(len(world.a_physics_square) == len(world.physics_square_entities))
+	case Ui:
+		append_entity_data(world, &world.a_ui, &world.ui_entities, a) or_return
+
+		assert(len(world.a_ui) == len(world.ui_entities))
+	}
+
+	entity = world.next_available_entity
 	world.next_available_entity += 1
 
-	return 0, false
+	err = nil
+	return
 }

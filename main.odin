@@ -1,9 +1,16 @@
 package main
 
+import "core:fmt"
 import "core:log"
 import "core:mem"
 
 import "ecs"
+
+check :: proc(err: ecs.Error, msg := #caller_expression) {
+	if err != nil {
+		fmt.panicf("%s: %s", msg, ecs.error_string(err))
+	}
+}
 
 main :: proc() {
 	context.logger = log.create_console_logger()
@@ -32,18 +39,14 @@ main :: proc() {
 		}
 	}
 
-	if err := ecs.generate("data.odin"); err != nil {
-		log.error("ecs code gen failed:", ecs.error_string(err))
-	}
+	check(ecs.generate("data.odin"))
 
 	world: World
-	if err := init(&world); err != nil {
-		log.error("ecs world init failed:", ecs.error_string(err))
-	}
-	defer deinit(&world)
+	defer destroy_world(&world)
 
-	_ = spawn(
+	_, err := spawn(
 		&world,
 		Physics_Square{pos = {x = 5, y = 6}, vel = {x = 2, y = 5}, acc = {x = 10, y = 2}},
 	)
+	check(err)
 }
