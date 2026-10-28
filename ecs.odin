@@ -106,3 +106,48 @@ spawn :: proc(world: ^World, archetype: Archetype) -> (entity: Entity, err: ecs.
 	err = nil
 	return
 }
+
+despawn :: proc(world: ^World, entity: Entity) {
+	loc := world.entity_locations[entity]
+
+	// despawn '4': swap the last element into the spot that is being despawned
+	// 123456789
+	//    ^
+	// 12395678
+	//    ^ swap 9 into 4's spot, decrement the size of the dynamic array
+
+	switch a in loc.archetype {
+	case Player:
+	// assert(
+
+	case Enemy:
+	case Ball:
+	case Physics_Square:
+		arr_len := len(world.a_physics_square) - 1
+
+		// remove entity from entity locations hashmap
+		delete_key(&world.entity_locations, entity)
+
+		// swap
+		world.a_physics_square[loc.idx] = world.a_physics_square[arr_len]
+		world.physics_square_entities[loc.idx] = world.physics_square_entities[arr_len]
+
+		resize(&world.a_physics_square, arr_len)
+		resize(&world.physics_square_entities, arr_len)
+
+		world.entity_locations[world.physics_square_entities[loc.idx]] = loc
+
+		assert(!(entity in world.entity_locations))
+		assert(len(world.a_physics_square) == len(world.physics_square_entities))
+
+		when ODIN_DEBUG {
+			if len(world.a_physics_square) != 0 {
+				assert(
+					world.entity_locations[world.physics_square_entities[loc.idx]].idx == loc.idx,
+				)
+			}
+		}
+
+	case Ui:
+	}
+}
