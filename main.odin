@@ -50,17 +50,17 @@ main :: proc() {
 	)
 	check(err)
 
-	// _, err = spawn(
-	// 	&world,
-	// 	Physics_Square{pos = {x = 5, y = 6}, vel = {x = 2, y = 5}, acc = {x = 10, y = 2}},
-	// )
-	// check(err)
-	//
-	// _, err = spawn(
-	// 	&world,
-	// 	Physics_Square{pos = {x = 5, y = 6}, vel = {x = 2, y = 5}, acc = {x = 10, y = 2}},
-	// )
-	// check(err)
+	_, err = spawn(
+		&world,
+		Physics_Square{pos = {x = 5, y = 6}, vel = {x = 2, y = 5}, acc = {x = 10, y = 2}},
+	)
+	check(err)
+
+	_, err = spawn(
+		&world,
+		Physics_Square{pos = {x = 5, y = 6}, vel = {x = 2, y = 5}, acc = {x = 10, y = 2}},
+	)
+	check(err)
 
 	despawn(&world, phys_sqr)
 }
