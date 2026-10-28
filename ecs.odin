@@ -123,30 +123,27 @@ despawn :: proc(world: ^World, entity: Entity) {
 	case Enemy:
 	case Ball:
 	case Physics_Square:
-		arr_len := len(world.a_physics_square) - 1
+		last_idx := len(world.a_physics_square) - 1
+
+		// swap
+		world.a_physics_square[loc.idx] = world.a_physics_square[last_idx]
+		world.physics_square_entities[loc.idx] = world.physics_square_entities[last_idx]
+
+		world.entity_locations[world.physics_square_entities[loc.idx]] = loc
 
 		// remove entity from entity locations hashmap
 		delete_key(&world.entity_locations, entity)
 
-		// swap
-		world.a_physics_square[loc.idx] = world.a_physics_square[arr_len]
-		world.physics_square_entities[loc.idx] = world.physics_square_entities[arr_len]
-
-		resize(&world.a_physics_square, arr_len)
-		resize(&world.physics_square_entities, arr_len)
-
-		world.entity_locations[world.physics_square_entities[loc.idx]] = loc
+		resize(&world.a_physics_square, last_idx)
+		resize(&world.physics_square_entities, last_idx)
 
 		assert(!(entity in world.entity_locations))
 		assert(len(world.a_physics_square) == len(world.physics_square_entities))
 
-		when ODIN_DEBUG {
-			if len(world.a_physics_square) != 0 {
-				assert(
-					world.entity_locations[world.physics_square_entities[loc.idx]].idx == loc.idx,
-				)
-			}
-		}
+		assert(
+			(len(world.a_physics_square) == 0) ||
+			(world.entity_locations[world.physics_square_entities[loc.idx]].idx == loc.idx),
+		)
 
 	case Ui:
 	}
