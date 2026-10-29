@@ -1,6 +1,6 @@
 package main
 
-// import "core:fmt"
+import "core:log"
 
 import "ecs"
 
@@ -62,8 +62,8 @@ append_entity_data :: proc(
 	append(&archetype.entities, world.next_available_entity) or_return
 
 	assert(
-		world.entity_locations[world.next_available_entity].idx ==
-		archetype.entities[len(archetype.entities) - 1],
+		world.entity_locations[archetype.entities[len(archetype.entities) - 1]].idx ==
+		len(archetype.entities) - 1,
 	)
 
 	return nil
