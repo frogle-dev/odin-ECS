@@ -1,17 +1,20 @@
 package main
 
-import "core:log"
+// import "core:log"
+import "core:testing"
 
 import "ecs"
 
 Entity :: uint
 
 Entity_Location :: struct {
+	// TODO: potentially change archetype field because it shouldnt hold any data
 	archetype: Archetype,
 	idx:       uint,
 }
 
 Internal_Archetype :: struct($User_Archetype: typeid) {
+	// TODO: add a check that ensures User_Archetype is of Archetype union
 	data:     #soa[dynamic]User_Archetype,
 	entities: [dynamic]Entity,
 }
@@ -73,24 +76,14 @@ spawn :: proc(world: ^World, archetype: Archetype) -> (entity: Entity, err: ecs.
 	switch a in archetype {
 	case Player:
 		append_entity_data(world, &world.a_player, a) or_return
-
-	// assert(len(world.a_player) == len(world.player_entities))
 	case Enemy:
 		append_entity_data(world, &world.a_enemy, a) or_return
-
-	// assert(len(world.a_enemy) == len(world.enemy_entities))
 	case Ball:
 		append_entity_data(world, &world.a_ball, a) or_return
-
-	// assert(len(world.a_ball) == len(world.ball_entities))
 	case Physics_Square:
 		append_entity_data(world, &world.a_physics_square, a) or_return
-
-	// assert(len(world.a_physics_square) == len(world.physics_square_entities))
 	case Ui:
 		append_entity_data(world, &world.a_ui, a) or_return
-
-	// assert(len(world.a_ui) == len(world.ui_entities))
 	}
 
 	entity = world.next_available_entity
@@ -158,4 +151,61 @@ despawn :: proc(world: ^World, entity: Entity) -> ecs.Error {
 	}
 
 	return nil
+}
+
+//////////// CHECKS FOR TESTING ///////////////
+
+archetype_checks :: proc(
+	t: ^testing.T,
+	world: ^World,
+	a: ^Internal_Archetype($T),
+	expected_data: []T,
+) {
+	testing.expect(t, len(a.data) == len(a.entities))
+
+	for e, i in a.entities {
+		_, ok := world.entity_locations[e].archetype.(T)
+		testing.expect(t, ok)
+
+		testing.expect(t, a.entities[world.entity_locations[e].idx] == e)
+
+		verify_data(t, world, e, a, &expected_data[i])
+	}
+}
+
+Verify_Info :: struct {
+	player_expected:         [dynamic]Player,
+	enemy_expected:          [dynamic]Enemy,
+	ball_expected:           [dynamic]Ball,
+	physics_square_expected: [dynamic]Physics_Square,
+	ui_expected:             [dynamic]Ui,
+}
+
+destroy_verify :: proc(info: ^Verify_Info) {
+	delete(info.player_expected)
+	delete(info.enemy_expected)
+	delete(info.ball_expected)
+	delete(info.physics_square_expected)
+	delete(info.ui_expected)
+}
+
+verify :: proc(t: ^testing.T, world: ^World, info: Verify_Info) {
+	archetype_checks(t, world, &world.a_player, info.player_expected[:])
+	archetype_checks(t, world, &world.a_enemy, info.enemy_expected[:])
+	archetype_checks(t, world, &world.a_ball, info.ball_expected[:])
+	archetype_checks(t, world, &world.a_physics_square, info.physics_square_expected[:])
+	archetype_checks(t, world, &world.a_ui, info.ui_expected[:])
+}
+
+verify_data :: proc(
+	t: ^testing.T,
+	world: ^World,
+	e: Entity,
+	a: ^Internal_Archetype($T),
+	data: ^T,
+) {
+	i := world.entity_locations[e].idx
+
+	testing.expect(t, a.data[i] == data^)
+	testing.expect(t, a.entities[i] == e)
 }
