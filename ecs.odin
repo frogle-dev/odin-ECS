@@ -6,10 +6,26 @@ import "ecs"
 
 Entity :: uint
 
+Archetype_Id :: enum {
+	Player,
+	Enemy,
+	Ball,
+	Physics_Square,
+	Ui,
+}
+
+type_to_archetype_id :: proc($T: typeid) -> Archetype_Id {
+	when T == Player do return .Player
+	else when T == Enemy do return .Enemy
+	else when T == Ball do return .Ball
+	else when T == Physics_Square do return .Physics_Square
+	else when T == Ui do return .Ui
+	else do #assert(false, "Invalid type sent to 'type_to_archetype_id")
+}
+
 Entity_Location :: struct {
-	// TODO: potentially change archetype field because it shouldnt hold any data
-	archetype: Archetype,
-	idx:       uint,
+	archetype_id: Archetype_Id,
+	idx:          uint,
 }
 
 Internal_Archetype :: struct($User_Archetype: typeid) {
@@ -52,13 +68,12 @@ destroy_world :: proc(world: ^World) {
 
 // TODO: use this function in places that need it
 get_archetype_field :: proc(world: ^World, $T: typeid) -> ^Internal_Archetype(T) {
-	when T == Player do return world.a_player
-	else when T == Enemy do return world.a_enemy
-	else when T == Ball do return world.a_ball
-	else when T == Physics_Square do return world.a_physics_square
-	else when T == Ui do return world.a_player
-
-	return nil
+	when T == Player do return &world.a_player
+	else when T == Enemy do return &world.a_enemy
+	else when T == Ball do return &world.a_ball
+	else when T == Physics_Square do return &world.a_physics_square
+	else when T == Ui do return &world.a_ui
+	else do #assert(false, "Invalid type sent to 'get_archetype_field")
 }
 
 append_entity_data :: proc(
@@ -67,8 +82,8 @@ append_entity_data :: proc(
 	data: User_Archetype,
 ) -> ecs.Error {
 	world.entity_locations[world.next_available_entity] = {
-		archetype = data,
-		idx       = len(archetype.data),
+		archetype_id = type_to_archetype_id(User_Archetype),
+		idx          = len(archetype.data),
 	}
 
 	append(&archetype.data, data) or_return
@@ -147,16 +162,16 @@ despawn :: proc(world: ^World, entity: Entity) -> ecs.Error {
 	// 12395678
 	//    ^ swap 9 into 4's spot, decrement the size of the dynamic array
 
-	switch a in loc.archetype {
-	case Player:
+	switch loc.archetype_id {
+	case .Player:
 		swap_and_pop(world, &world.a_player, entity, loc) or_return
-	case Enemy:
+	case .Enemy:
 		swap_and_pop(world, &world.a_enemy, entity, loc) or_return
-	case Ball:
+	case .Ball:
 		swap_and_pop(world, &world.a_ball, entity, loc) or_return
-	case Physics_Square:
+	case .Physics_Square:
 		swap_and_pop(world, &world.a_physics_square, entity, loc) or_return
-	case Ui:
+	case .Ui:
 		swap_and_pop(world, &world.a_ui, entity, loc) or_return
 	}
 
@@ -174,8 +189,7 @@ archetype_checks :: proc(
 	testing.expect(t, len(a.data) == len(a.entities))
 
 	for e, i in a.entities {
-		_, ok := world.entity_locations[e].archetype.(T)
-		testing.expect(t, ok)
+		testing.expect(t, world.entity_locations[e].archetype_id == type_to_archetype_id(T))
 
 		testing.expect(t, a.entities[world.entity_locations[e].idx] == e)
 
