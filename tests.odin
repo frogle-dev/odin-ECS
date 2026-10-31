@@ -15,7 +15,7 @@ check :: proc(err: ecs.Error, msg := #caller_expression) {
 
 spawn_w_verify_info :: proc(
 	world: ^World,
-	data: Archetype,
+	data: $T,
 	info: ^Verify_Info,
 	total_spawn_time: ^time.Duration,
 ) {
@@ -26,18 +26,11 @@ spawn_w_verify_info :: proc(
 
 	total_spawn_time^ += time.tick_since(start)
 
-	switch a in data {
-	case Player:
-		append(&info.player_expected, a)
-	case Enemy:
-		append(&info.enemy_expected, a)
-	case Ball:
-		append(&info.ball_expected, a)
-	case Physics_Square:
-		append(&info.physics_square_expected, a)
-	case Ui:
-		append(&info.ui_expected, a)
-	}
+	when T == Player do append(&info.player_expected, data)
+	else when T == Enemy do append(&info.enemy_expected, data)
+	else when T == Ball do append(&info.ball_expected, data)
+	else when T == Physics_Square do append(&info.physics_square_expected, data)
+	else when T == Ui do append(&info.ui_expected, data)
 }
 
 @(test)

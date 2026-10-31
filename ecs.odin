@@ -54,13 +54,9 @@ World :: struct {
 
 destroy_world :: proc(world: ^World) {
 	delete_internal_archetype(world.a_player)
-
 	delete_internal_archetype(world.a_enemy)
-
 	delete_internal_archetype(world.a_ball)
-
 	delete_internal_archetype(world.a_physics_square)
-
 	delete_internal_archetype(world.a_ui)
 
 	delete(world.entity_locations)
@@ -78,38 +74,39 @@ get_archetype_field :: proc(world: ^World, $T: typeid) -> ^Internal_Archetype(T)
 
 append_entity_data :: proc(
 	world: ^World,
-	archetype: ^Internal_Archetype($User_Archetype),
-	data: User_Archetype,
+	// archetype: ^Internal_Archetype($User_Archetype),
+	data: $T,
 ) -> ecs.Error {
+	a := get_archetype_field(world, T)
+
 	world.entity_locations[world.next_available_entity] = {
-		archetype_id = type_to_archetype_id(User_Archetype),
-		idx          = len(archetype.data),
+		archetype_id = type_to_archetype_id(T),
+		idx          = len(a.data),
 	}
 
-	append(&archetype.data, data) or_return
-	append(&archetype.entities, world.next_available_entity) or_return
+	append(&a.data, data) or_return
+	append(&a.entities, world.next_available_entity) or_return
 
-	assert(
-		world.entity_locations[archetype.entities[len(archetype.entities) - 1]].idx ==
-		len(archetype.entities) - 1,
-	)
+	assert(world.entity_locations[a.entities[len(a.entities) - 1]].idx == len(a.entities) - 1)
 
 	return nil
 }
 
-spawn :: proc(world: ^World, archetype: Archetype) -> (entity: Entity, err: ecs.Error) {
-	switch a in archetype {
-	case Player:
-		append_entity_data(world, &world.a_player, a) or_return
-	case Enemy:
-		append_entity_data(world, &world.a_enemy, a) or_return
-	case Ball:
-		append_entity_data(world, &world.a_ball, a) or_return
-	case Physics_Square:
-		append_entity_data(world, &world.a_physics_square, a) or_return
-	case Ui:
-		append_entity_data(world, &world.a_ui, a) or_return
-	}
+spawn :: proc(world: ^World, archetype: $T) -> (entity: Entity, err: ecs.Error) {
+	// switch a in archetype {
+	// case Player:
+	// 	append_entity_data(world, &world.a_player, a) or_return
+	// case Enemy:
+	// 	append_entity_data(world, &world.a_enemy, a) or_return
+	// case Ball:
+	// 	append_entity_data(world, &world.a_ball, a) or_return
+	// case Physics_Square:
+	// 	append_entity_data(world, &world.a_physics_square, a) or_return
+	// case Ui:
+	// 	append_entity_data(world, &world.a_ui, a) or_return
+	// }
+
+	append_entity_data(world, archetype)
 
 	entity = world.next_available_entity
 	world.next_available_entity += 1
