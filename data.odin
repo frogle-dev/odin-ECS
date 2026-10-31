@@ -33,6 +33,7 @@ Mana :: struct {
 PlayerTag :: struct {}
 EnemyTag :: struct {}
 
+@(archetype)
 Player :: struct {
 	pos:  Position,
 	vel:  Velocity,
@@ -44,6 +45,7 @@ Player :: struct {
 	tag:  PlayerTag,
 }
 
+@(archetype)
 Enemy :: struct {
 	pos: Position,
 	vel: Velocity,
@@ -54,17 +56,20 @@ Enemy :: struct {
 	tag: EnemyTag,
 }
 
+@(archetype)
 Ball :: struct {
 	pos: Position,
 	vel: Velocity,
 }
 
+@(archetype)
 Physics_Square :: struct {
 	pos: Position,
 	vel: Velocity,
 	acc: Acceleration,
 }
 
+@(archetype)
 Ui :: struct {
 	pos: Position,
 }
@@ -117,13 +122,4 @@ wizard :: proc(query: #soa[]struct {
 		mana:    ^Mana,
 		player:  ^PlayerTag,
 	}) {
-}
-
-@(archetype)
-Archetype :: union {
-	Player,
-	Enemy,
-	Ball,
-	Physics_Square,
-	Ui,
 }

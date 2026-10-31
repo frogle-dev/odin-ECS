@@ -72,11 +72,8 @@ get_archetype_field :: proc(world: ^World, $T: typeid) -> ^Internal_Archetype(T)
 	else do #assert(false, "Invalid type sent to 'get_archetype_field")
 }
 
-append_entity_data :: proc(
-	world: ^World,
-	// archetype: ^Internal_Archetype($User_Archetype),
-	data: $T,
-) -> ecs.Error {
+@(require_results)
+append_entity_data :: proc(world: ^World, data: $T) -> ecs.Error {
 	a := get_archetype_field(world, T)
 
 	world.entity_locations[world.next_available_entity] = {
@@ -93,20 +90,7 @@ append_entity_data :: proc(
 }
 
 spawn :: proc(world: ^World, archetype: $T) -> (entity: Entity, err: ecs.Error) {
-	// switch a in archetype {
-	// case Player:
-	// 	append_entity_data(world, &world.a_player, a) or_return
-	// case Enemy:
-	// 	append_entity_data(world, &world.a_enemy, a) or_return
-	// case Ball:
-	// 	append_entity_data(world, &world.a_ball, a) or_return
-	// case Physics_Square:
-	// 	append_entity_data(world, &world.a_physics_square, a) or_return
-	// case Ui:
-	// 	append_entity_data(world, &world.a_ui, a) or_return
-	// }
-
-	append_entity_data(world, archetype)
+	append_entity_data(world, archetype) or_return
 
 	entity = world.next_available_entity
 	world.next_available_entity += 1
