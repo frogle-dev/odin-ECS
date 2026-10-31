@@ -1,6 +1,5 @@
 package main
 
-// import "core:log"
 import "core:testing"
 
 import "ecs"
@@ -19,6 +18,13 @@ Internal_Archetype :: struct($User_Archetype: typeid) {
 	entities: [dynamic]Entity,
 }
 
+delete_internal_archetype :: proc(a: Internal_Archetype($User_Archetype)) -> ecs.Error {
+	delete(a.data) or_return
+	delete(a.entities) or_return
+
+	return nil
+}
+
 World :: struct {
 	a_player:         Internal_Archetype(Player),
 	a_enemy:          Internal_Archetype(Enemy),
@@ -28,13 +34,6 @@ World :: struct {
 
 	entity_locations:      map[Entity]Entity_Location,
 	next_available_entity: Entity,
-}
-
-delete_internal_archetype :: proc(a: Internal_Archetype($User_Archetype)) -> ecs.Error {
-	delete(a.data) or_return
-	delete(a.entities) or_return
-
-	return nil
 }
 
 destroy_world :: proc(world: ^World) {
@@ -49,6 +48,17 @@ destroy_world :: proc(world: ^World) {
 	delete_internal_archetype(world.a_ui)
 
 	delete(world.entity_locations)
+}
+
+// TODO: use this function in places that need it
+get_archetype_field :: proc(world: ^World, $T: typeid) -> ^Internal_Archetype(T) {
+	when T == Player do return world.a_player
+	else when T == Enemy do return world.a_enemy
+	else when T == Ball do return world.a_ball
+	else when T == Physics_Square do return world.a_physics_square
+	else when T == Ui do return world.a_player
+
+	return nil
 }
 
 append_entity_data :: proc(

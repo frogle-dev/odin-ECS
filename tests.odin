@@ -1,6 +1,5 @@
 package main
 
-import "core:fmt"
 import "core:log"
 import "core:math/rand"
 import "core:testing"
@@ -10,7 +9,7 @@ import "ecs"
 
 check :: proc(err: ecs.Error, msg := #caller_expression) {
 	if err != nil {
-		fmt.panicf("%s: %s", msg, ecs.error_string(err))
+		log.panicf("%s: %s", msg, ecs.error_string(err))
 	}
 }
 
